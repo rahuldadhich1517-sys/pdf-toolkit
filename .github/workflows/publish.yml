@@ -2,7 +2,9 @@ name: Publish
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
@@ -62,9 +64,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set GitHub Packages scope
-        run: npm pkg set name=@rahuldadhich1517-sys/pdf-toolkit
-
+      - name: Set GitHub Packages scope and registry
+        run: |
+          npm pkg set name=@rahuldadhich1517-sys/pdf-toolkit
+          npm pkg set publishConfig.registry=https://npm.pkg.github.com
 
       - name: Publish package
         run: npm publish --registry=https://npm.pkg.github.com

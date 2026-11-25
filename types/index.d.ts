@@ -37,6 +37,120 @@ export declare const ERROR_CODES: {
 
 export declare const SUPPORTED_PDF_PROFILE: string;
 
+export interface ToolkitLimits {
+  maxFileSize: number;
+  maxPageCount: number;
+  maxStreamSize: number;
+  maxNestingDepth: number;
+  maxImageDimension: number;
+  maxTextLength: number;
+}
+
+export declare const DEFAULT_LIMITS: ToolkitLimits;
+export declare function resolveLimits(customLimits?: Partial<ToolkitLimits>): ToolkitLimits;
+
+export declare const STANDARD_FONTS: {
+  readonly HELVETICA: 'Helvetica';
+  readonly HELVETICA_BOLD: 'Helvetica-Bold';
+  readonly HELVETICA_OBLIQUE: 'Helvetica-Oblique';
+  readonly HELVETICA_BOLDOBLIQUE: 'Helvetica-BoldOblique';
+  readonly TIMES_ROMAN: 'Times-Roman';
+  readonly TIMES_BOLD: 'Times-Bold';
+  readonly TIMES_ITALIC: 'Times-Italic';
+  readonly TIMES_BOLDITALIC: 'Times-BoldItalic';
+  readonly COURIER: 'Courier';
+  readonly COURIER_BOLD: 'Courier-Bold';
+  readonly COURIER_OBLIQUE: 'Courier-Oblique';
+  readonly COURIER_BOLDOBLIQUE: 'Courier-BoldOblique';
+  readonly SYMBOL: 'Symbol';
+  readonly ZAPF_DINGBATS: 'ZapfDingbats';
+};
+
+export declare class PdfRef {
+  num: number;
+  gen: number;
+  constructor(num: number, gen?: number);
+  toString(): string;
+  equals(other: unknown): boolean;
+}
+
+export declare class PdfName {
+  value: string;
+  constructor(value: string);
+  toString(): string;
+}
+
+export declare class PdfString {
+  value: string;
+  constructor(value: string);
+  toString(): string;
+}
+
+export declare class PdfHexString {
+  value: string;
+  constructor(value: string);
+  toString(): string;
+}
+
+export declare class PdfDict {
+  map: Map<string, unknown>;
+  constructor(entries?: Record<string, unknown> | [string, unknown][]);
+  get(key: string): unknown;
+  set(key: string, value: unknown): this;
+  has(key: string): boolean;
+  delete(key: string): boolean;
+  entries(): IterableIterator<[string, unknown]>;
+  toPdfBytes(): Uint8Array;
+}
+
+export declare class PdfStream {
+  dict: PdfDict;
+  data: Uint8Array;
+  constructor(dict: PdfDict, data: Uint8Array);
+  toPdfBytes(): Uint8Array;
+}
+
+export declare class ContentStream {
+  buffer: string[];
+  constructor();
+  text(str: string): this;
+  font(name: string, size: number): this;
+  textPos(x: number, y: number): this;
+  nextLine(): this;
+  getBytes(): Uint8Array;
+}
+
+export declare class PdfWriter {
+  constructor();
+  addPage(width?: number, height?: number): number;
+  write(): Uint8Array;
+}
+
+export declare class PdfParser {
+  constructor(data: Uint8Array | ArrayBuffer, limits?: Partial<ToolkitLimits>);
+  parse(): { pages: unknown[]; trailer: PdfDict };
+}
+
+export declare const TOKEN_TYPES: {
+  readonly NAME: 'NAME';
+  readonly STRING: 'STRING';
+  readonly HEXSTRING: 'HEXSTRING';
+  readonly NUMBER: 'NUMBER';
+  readonly BOOLEAN: 'BOOLEAN';
+  readonly NULL: 'NULL';
+  readonly DICT_START: 'DICT_START';
+  readonly DICT_END: 'DICT_END';
+  readonly ARRAY_START: 'ARRAY_START';
+  readonly ARRAY_END: 'ARRAY_END';
+  readonly KEYWORD: 'KEYWORD';
+  readonly EOF: 'EOF';
+};
+
+export declare class Tokenizer {
+  constructor(bytes: Uint8Array);
+  nextToken(): { type: string; value: unknown };
+}
+
 export interface ToolCapability {
   id: string;
   status: 'full' | 'limited' | 'unsupported';
