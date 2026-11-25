@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@rahul_dadhich15/pdf-toolkit - Browser Verification Harness</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+      --primary: #38bdf8;
+      --success: #4ade80;
+      --danger: #f87171;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    h1, h2 { margin-top: 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    button {
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover { opacity: 0.9; }
+    pre {
+      background: #020617;
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+      color: #38bdf8;
+      max-height: 200px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #334155;
+      margin-bottom: 8px;
+    }
+    .badge.full { background: #166534; color: #bbf7d0; }
+    .badge.limited { background: #854d0e; color: #fef08a; }
+    .badge.unsupported { background: #991b1b; color: #fecaca; }
+  </style>
+</head>
+<body>
+  <h1>PDF Toolkit - Browser Verification Harness</h1>
+  <p style="color: var(--subtext)">
+    Automated client-side verification interface for all 16 PDF utilities and Web APIs.
+  </p>
+
+  <button id="runAllBtn">Run All Browser Verification Tests</button>
+
+  <div id="statusBanner" style="margin-top: 12px; font-weight: bold; color: var(--primary)">Ready.</div>
+  <pre id="test-results" style="margin-top: 12px; max-height: 400px; color: #4ade80;">Waiting for test execution...</pre>
+
+  <div class="grid" id="toolsGrid"></div>
+
+  <script type="module">
+    import * as toolkit from '../src/index.js';
+
+    window.toolkit = toolkit;
+    const capabilities = toolkit.getPdfToolkitCapabilities();
+    const grid = document.getElementById('toolsGrid');
+
+    Object.entries(capabilities.tools).forEach(([id, cap]) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <span class="badge ${cap.status}">${cap.status.toUpperCase()}</span>
+        <h3>${id}</h3>
+        <p style="font-size: 13px; color: var(--subtext)">${cap.limitations[0] || 'Standard operation.'}</p>
+        <button id="btn-${id}">Verify ${id}</button>
+        <pre id="output-${id}">Ready.</pre>
+      `;
+      grid.appendChild(card);
+    });
+
+    window.runAllVerificationTests = async function() {
+      const banner = document.getElementById('statusBanner');
+      const resultsEl = document.getElementById('test-results');
+      banner.textContent = 'Running browser verification suite...';
+
+      const results = {
+        browser: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        webApis: {},
+        tools: {},
+        passCount: 0,
+        failCount: 0
+      };
+
+      function record(category, name, passed, details) {
+        if (passed) results.passCount++; else results.failCount++;
+        results[category][name] = { passed, details };
+      }
+
+      try {
+        // 1. Web API checks
+        record('webApis', 'Blob', typeof Blob !== 'undefined', 'Blob API available');
+        record('webApis', 'File', typeof File !== 'undefined', 'File API available');
+        record('webApis', 'Canvas', typeof document.createElement('canvas').getContext === 'function', '2D Canvas supported');
+        record('webApis', 'OffscreenCanvas', typeof OffscreenCanvas !== 'undefined', 'OffscreenCanvas supported');
+        record('webApis', 'createImageBitmap', typeof createImageBitmap === 'function', 'createImageBitmap supported');
+        record('webApis', 'DecompressionStream', typeof DecompressionStream !== 'undefined', 'DecompressionStream supported');
+        record('webApis', 'CompressionStream', typeof CompressionStream !== 'undefined', 'CompressionStream supported');
+
+        // 2. textToPdf
+        const textPdfBlob = await toolkit.textToPdf('Browser Verification Document\nPage 1 text content.', {
+          pageSize: 'A4',
+          fontSize: 12
+        });
+        record('tools', 'text-to-pdf', textPdfBlob instanceof Blob && textPdfBlob.size > 200, `Generated Blob size: ${textPdfBlob.size}`);
+
+        // 3. base64ToPdf
+        const textBytes = await toolkit.textToPdf('Base64 content', { format: 'uint8array' });
+        let binaryStr = '';
+        for (let i = 0; i < textBytes.length; i++) binaryStr += String.fromCharCode(textBytes[i]);
+        const b64 = btoa(binaryStr);
+        const b64Blob = toolkit.base64ToPdf(b64);
+        record('tools', 'base64-to-pdf', b64Blob instanceof Blob, `Decoded Base64 to Blob (${b64Blob.size} bytes)`);
+
+        // 4. markdownToPdf
+        const mdBlob = await toolkit.markdownToPdf('# Browser Markdown\n\n- Zero dependency\n- Client-side execution');
+        record('tools', 'markdown-to-pdf', mdBlob instanceof Blob, `Markdown rendered to PDF (${mdBlob.size} bytes)`);
+
+        // 5. htmlToPdf
+        const preparedHtml = toolkit.prepareHtmlForPrint('<h1>Browser Print Test</h1><p>Sanitized content</p>');
+        record('tools', 'html-to-pdf', preparedHtml.includes('Browser Print Test') && preparedHtml.includes('@page'), 'Print document prepared cleanly with CSS');
+
+        // 6. imageToPdf (1x1 minimal JPEG)
+        const sampleJpeg = new Uint8Array([
+          0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48,
+          0x00, 0x48, 0x00, 0x00, 0xff, 0xdb, 0x00, 0x43, 0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08,
+          0x07, 0x07, 0x07, 0x09, 0x09, 0x08, 0x0a, 0x0c, 0x14, 0x0d, 0x0c, 0x0b, 0x0b, 0x0c, 0x19, 0x12,
+          0x13, 0x0f, 0x14, 0x1d, 0x1a, 0x1f, 0x1e, 0x1d, 0x1a, 0x1c, 0x1c, 0x20, 0x24, 0x2e, 0x27, 0x20,
+          0x22, 0x2c, 0x23, 0x1c, 0x1c, 0x28, 0x37, 0x29, 0x2c, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1f, 0x27,
+          0x39, 0x3d, 0x38, 0x32, 0x3c, 0x2e, 0x33, 0x34, 0x32, 0xff, 0xc0, 0x00, 0x0b, 0x08, 0x00, 0x01,
+          0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xff, 0xc4, 0x00, 0x1f, 0x00, 0x00, 0x01, 0x05, 0x01, 0x01,
+          0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
+          0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f,
+          0x00, 0xbf, 0x00, 0xff, 0xd9
+        ]);
+        const imgPdfBlob = await toolkit.imageToPdf(sampleJpeg);
+        record('tools', 'image-to-pdf', imgPdfBlob instanceof Blob, `Image embedded directly into PDF (${imgPdfBlob.size} bytes)`);
+
+        // 7. rotatePdfPages
+        const rotatedBlob = await toolkit.rotatePdfPages(textPdfBlob, { degrees: 90, pages: [1] });
+        const rotVal = await toolkit.getPdfPageRotation(rotatedBlob, 1);
+        record('tools', 'pdf-rotate', rotVal === 90, `Page rotation verified at ${rotVal} degrees`);
+
+        // 8. updatePdfMetadata & readPdfMetadata
+        const updatedBlob = await toolkit.updatePdfMetadata(rotatedBlob, { Title: 'Browser Test Title', Author: 'Tester' });
+        const readMeta = await toolkit.readPdfMetadata(updatedBlob);
+        record('tools', 'pdf-metadata', readMeta.title === 'Browser Test Title', `Read back title: "${readMeta.title}"`);
+
+        // 9. compressPdf
+        const compRes = await toolkit.compressPdf(updatedBlob);
+        record('tools', 'pdf-compress', compRes.blob instanceof Blob && typeof compRes.reductionPercentage === 'number', `Compression verified (reduction: ${compRes.reductionPercentage}%)`);
+
+        // 10. splitPdf & mergePdfs
+        const parts = await toolkit.splitPdf(compRes.blob);
+        const mergedBlob = await toolkit.mergePdfs([parts[0], textPdfBlob]);
+        record('tools', 'pdf-split-and-merge', parts.length === 1 && mergedBlob instanceof Blob, 'Split and merged successfully');
+
+        // 11. extractPdfText
+        const extracted = await toolkit.extractPdfText(mergedBlob);
+        record('tools', 'pdf-to-text', extracted.text.includes('Browser Verification Document'), 'Extracted text accurately');
+
+        // 12. extractPdfRawContentStreams
+        const rawStreams = await toolkit.extractPdfRawContentStreams(mergedBlob, { decode: true });
+        record('tools', 'pdf-to-raw', rawStreams.length >= 1 && rawStreams[0].bytes instanceof Uint8Array, `Extracted ${rawStreams.length} stream(s)`);
+
+        // 13. renderPdfPage (Canvas)
+        const renderRes = await toolkit.renderPdfPage(textPdfBlob, 1, { scale: 1.0 });
+        record('tools', 'pdf-to-image', renderRes.blob instanceof Blob && renderRes.width > 0, `Rendered page to canvas image (${renderRes.width}x${renderRes.height})`);
+
+        // 14. tiffToPdf capabilities
+        const tiffCaps = toolkit.getTiffConversionCapabilities();
+        record('tools', 'tiff-to-pdf', typeof tiffCaps.supported === 'boolean', `TIFF native browser support: ${tiffCaps.supported}`);
+
+        // 15. pdf-encrypt & pdf-decrypt rejection
+        let encRejected = false;
+        try { await toolkit.encryptPdf(textBytes); } catch (e) { encRejected = e.code === 'UNSUPPORTED_OPERATION'; }
+        let decRejected = false;
+        try { await toolkit.decryptPdf(textBytes, 'pass'); } catch (e) { decRejected = e.code === 'UNSUPPORTED_OPERATION'; }
+        record('tools', 'pdf-encrypt-decrypt-unsupported', encRejected && decRejected, 'Both correctly rejected with UNSUPPORTED_OPERATION');
+
+        banner.textContent = `All Tests Completed: ${results.passCount} Passed, ${results.failCount} Failed.`;
+        resultsEl.textContent = JSON.stringify(results, null, 2);
+        window.verificationComplete = true;
+        window.verificationResults = results;
+        return results;
+      } catch (err) {
+        banner.textContent = `Execution Error: ${err.message}`;
+        resultsEl.textContent = `FAILED: ${err.stack}`;
+        window.verificationComplete = true;
+        window.verificationResults = { error: err.message, stack: err.stack };
+        throw err;
+      }
+    };
+
+    document.getElementById('runAllBtn').addEventListener('click', () => {
+      window.runAllVerificationTests();
+    });
+
+    // Run automatically if ?autorun=1 in URL
+    if (new URLSearchParams(window.location.search).get('autorun') === '1') {
+      window.runAllVerificationTests();
+    }
+  </script>
+</body>
+</html>

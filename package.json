@@ -1,0 +1,147 @@
+{
+  "name": "@rahul_dadhich15/pdf-toolkit",
+  "version": "0.1.0",
+  "description": "Zero-dependency client-side PDF and document processing toolkit for modern browsers and JavaScript runtimes.",
+  "type": "module",
+  "sideEffects": false,
+  "license": "MIT",
+  "author": "Rahul Dadhich",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahul_dadhich15/pdf-toolkit"
+  },
+  "keywords": [
+    "pdf",
+    "zero-dependency",
+    "browser",
+    "client-side",
+    "pdf-generator",
+    "pdf-parser",
+    "pdf-merge",
+    "pdf-split",
+    "pdf-rotate",
+    "markdown-to-pdf",
+    "text-to-pdf",
+    "image-to-pdf",
+    "document-processing"
+  ],
+  "main": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./base64-to-pdf": {
+      "types": "./types/index.d.ts",
+      "import": "./src/base64-to-pdf/index.js",
+      "default": "./src/base64-to-pdf/index.js"
+    },
+    "./html-to-pdf": {
+      "types": "./types/index.d.ts",
+      "import": "./src/html-to-pdf/index.js",
+      "default": "./src/html-to-pdf/index.js"
+    },
+    "./image-to-pdf": {
+      "types": "./types/index.d.ts",
+      "import": "./src/image-to-pdf/index.js",
+      "default": "./src/image-to-pdf/index.js"
+    },
+    "./markdown-to-pdf": {
+      "types": "./types/index.d.ts",
+      "import": "./src/markdown-to-pdf/index.js",
+      "default": "./src/markdown-to-pdf/index.js"
+    },
+    "./pdf-compress": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-compress/index.js",
+      "default": "./src/pdf-compress/index.js"
+    },
+    "./pdf-merge": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-merge/index.js",
+      "default": "./src/pdf-merge/index.js"
+    },
+    "./pdf-metadata": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-metadata/index.js",
+      "default": "./src/pdf-metadata/index.js"
+    },
+    "./pdf-encrypt": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-encrypt/index.js",
+      "default": "./src/pdf-encrypt/index.js"
+    },
+    "./pdf-decrypt": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-decrypt/index.js",
+      "default": "./src/pdf-decrypt/index.js"
+    },
+    "./pdf-rotate": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-rotate/index.js",
+      "default": "./src/pdf-rotate/index.js"
+    },
+    "./pdf-split": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-split/index.js",
+      "default": "./src/pdf-split/index.js"
+    },
+    "./pdf-to-image": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-to-image/index.js",
+      "default": "./src/pdf-to-image/index.js"
+    },
+    "./pdf-to-raw": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-to-raw/index.js",
+      "default": "./src/pdf-to-raw/index.js"
+    },
+    "./pdf-to-text": {
+      "types": "./types/index.d.ts",
+      "import": "./src/pdf-to-text/index.js",
+      "default": "./src/pdf-to-text/index.js"
+    },
+    "./text-to-pdf": {
+      "types": "./types/index.d.ts",
+      "import": "./src/text-to-pdf/index.js",
+      "default": "./src/text-to-pdf/index.js"
+    },
+    "./tiff-to-pdf": {
+      "types": "./types/index.d.ts",
+      "import": "./src/tiff-to-pdf/index.js",
+      "default": "./src/tiff-to-pdf/index.js"
+    },
+    "./capabilities": {
+      "types": "./types/index.d.ts",
+      "import": "./src/capabilities/index.js",
+      "default": "./src/capabilities/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "types",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "test:unit": "node --test tests/unit/**/*.test.js",
+    "test:security": "node --test tests/security/**/*.test.js",
+    "test:integration": "node --test tests/integration/**/*.test.js",
+    "test:browser": "node tests/browser-runner.js",
+    "test:all": "node --test tests/**/*.test.js",
+    "pack:check": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
